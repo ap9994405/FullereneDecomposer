@@ -80,8 +80,9 @@ void MainWindow::tabPageChanged(int index)
             else
             {
                 m_decomposer->setRootGraph(m_builder->getGraphModel());
-                m_identDecomposer->setRootGraph( m_builder->getGraphModel());
+                m_identDecomposer->setRootGraph(m_builder->getGraphModel());
                 m_zzCalculatorPanel->addRow(m_builder->getGraphModel());
+
             }
 
         }
