@@ -175,7 +175,7 @@ void MainWindow::selectall()
 
 void MainWindow::createActions()
 {
-    m_newfile = new QAction(QIcon(":/images/newfile.png"),tr("&New"),this);
+    m_newfile = new QAction(tr("Clean All"),this);
     connect(m_newfile, SIGNAL(triggered()), this, SLOT(clearAll()));
     m_selectall = new QAction(tr("Select All"),this);
     connect(m_selectall, SIGNAL(triggered()), this, SLOT(selectall()));

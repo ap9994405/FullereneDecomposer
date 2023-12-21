@@ -4,6 +4,9 @@
 #include <algorithm>
 #include <QtGlobal>
 #include <QVector3D>
+#include <QDir>
+#include <QFile>
+#include <QTextStream>
 
 #include <iostream>
 #include <fstream>
@@ -12,45 +15,54 @@ const double PI = std::acos(-1.0);
 static QHash<QPoint, QPointF> xyMap;
 static QHash<QPoint, float> xMap, yMap, zMap;
 static QString m_filename;
-static double size = 1.0;
+static double size = 2.0;
+static QString abspath = QDir::currentPath();
+static QString sep =QDir::separator();
 void readschlegel(QString filename)
 {
     // xyMap.clear();
-    m_filename = "readfile/"+filename+"_schlegel";
-    QString filePath = m_filename;
-    std::ifstream schlegelfile(filePath.toStdString());
-    if (!schlegelfile.is_open()) 
+    // qDebug() << "Current Path:" << abspath;
+    m_filename = abspath+sep+"readfile"+sep+filename+"_schlegel";
+
+    QFile schlegelfile(m_filename);
+    if (!schlegelfile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        std::cerr << "Unable to open the schelegel file." << std::endl;
-        std::exit(1);
+        qCritical() << "Unable to open the schlegel file.";
     }
     qreal x, y;
     int index=1;
-    while (schlegelfile >> x >> y) 
-    {
-        // qDebug() << x << y;
-        xyMap[QPoint(0, index)] = QPointF(x, y);
-        index += 1;
+    QTextStream in(&schlegelfile);
+    while (!in.atEnd()) 
+    {   
+        in >> x >> y;
+        if (!in.atEnd())
+        {
+            // qDebug() << x << y;
+            xyMap[QPoint(0, index)] = QPointF(x, y);
+            index += 1;
+        }
     }
 }
 void readxyz(QString filename)
 {
-    m_filename = "readfile/"+filename;
+    m_filename = abspath+sep+"readfile"+sep+filename;
     QString filePath = m_filename;
-    std::ifstream xyzfile(filePath.toStdString());
-    if (!xyzfile.is_open()) 
+    QFile xyzfile(filePath);
+    if (!xyzfile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        std::cerr << "Unable to open the xyzfile." << std::endl;
-        std::exit(1);
+        qCritical() << "Unable to open the xyzfile.";
     }
+
     int cnat;
-    std::string atom;
+    QString atom;
     qreal x, y, z;
     int index=1;
 
-    xyzfile >> cnat;
-    while (xyzfile >> atom >> x >> y >> z || cnat <20) 
+    QTextStream in(&xyzfile);
+    in >> cnat;
+    while (index <= cnat && !in.atEnd())
     {
+        in >> atom >> x >> y >> z;
         // qDebug() << x << y << z;
         xMap[QPoint(0, index)] = x;
         yMap[QPoint(0, index)] = y;

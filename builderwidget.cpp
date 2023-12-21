@@ -69,20 +69,28 @@ void BuilderWidget::draw_grid(QString filename)
 {
     // in fullerene bondlength not fixed
     double bondlength = 30.0;
-
-    QString filePath = "readfile/" + filename + +"_bondlist";
-    std::ifstream bondfile(filePath.toStdString());
-    if (!bondfile.is_open()) 
+    QString abspath = QDir::currentPath();
+    QString sep = QDir::separator();
+    QString m_filename = abspath+sep+"readfile" + sep + filename + +"_bondlist";
+    QFile bondlfile(m_filename);
+    if (!bondlfile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        std::cerr << "Unable to open the bond list file." << std::endl;
-        return;
+        qCritical() << "Unable to open the schlegel file.";
     }
-    int start, end;
+    int start, end;    
     std::vector<std::pair<int, int>> bondlist;
     bondlist.clear();
-    while (bondfile >> start >> end) 
+
+    QTextStream in(&bondlfile);
+    while (!in.atEnd()) 
     {
-        bondlist.emplace_back(start, end);
+        in >> start >> end;
+        if (!in.atEnd())
+        {
+            // qDebug() << start << end;
+            bondlist.emplace_back(start, end);
+        }
+
     }
     // for (const auto& aa : bondlist) 
     // {
