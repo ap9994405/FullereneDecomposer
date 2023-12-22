@@ -25,6 +25,7 @@ private:
     QHash<EdgeModel, BondItem* > edges;
     QSet<BondItem*> m_selected_edges;
     QSet<RingItem*> m_selected_rings;
+    QTreeWidget *treeWidget;
 signals:
     void modified();
     void ZZPolynomialRequest(GraphModel*);
@@ -34,8 +35,7 @@ private slots:
     void unselectBond(BondItem*);
     void ringClicked(RingItem* ring);
     void contextMenu(QPoint point);
-    void onListItemClicked(QListWidgetItem *item);
-
+    void onTreeItemClicked(QTreeWidgetItem *item, int column);
 public slots:
     // void ReadFile(QString filename);
     void clear();

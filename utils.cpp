@@ -8,9 +8,6 @@
 #include <QFile>
 #include <QTextStream>
 
-#include <iostream>
-#include <fstream>
-
 const double PI = std::acos(-1.0);
 static QHash<QPoint, QPointF> xyMap;
 static QHash<QPoint, float> xMap, yMap, zMap;

@@ -6,12 +6,10 @@
 #include "ringitem.h"
 #include "zoomableview.h"
 #include <QtGlobal>
+#include <QTreeWidget>
+#include <QTreeWidgetItem>
 
 #include "graphmodel.h"
-
-#include <iostream>
-#include <fstream>
-
 
 BuilderWidget::BuilderWidget(QWidget *parent)
     : QWidget(parent)
@@ -34,17 +32,53 @@ BuilderWidget::BuilderWidget(QWidget *parent)
     readschlegel("c20ih");
     draw_grid("c20ih");
     connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextMenu(QPoint)));;
-    QListWidget *listWidget = new QListWidget(this);
-    listWidget->addItem("C20Ih");
-    listWidget->addItem("C24D6d");
-    listWidget->addItem("C26D3h");
-    listWidget->addItem("C28D2");
-    listWidget->addItem("C28Td");
-    listWidget->addItem("C60Ih");
-    connect(listWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(onListItemClicked(QListWidgetItem*)));
-    layout->addWidget(listWidget);
+
+    treeWidget = new QTreeWidget(this);
+    treeWidget->setColumnCount(1);
+    treeWidget->header()->hide();
+    treeWidget->setIndentation(8);
+    QFont font;
+    font.setPointSize(10);
+    treeWidget->setFont(font);
+
+    QTreeWidgetItem *C20 = new QTreeWidgetItem(treeWidget);
+    C20->setText(0, "C20");
+    QTreeWidgetItem *C20Ih = new QTreeWidgetItem(C20);
+    C20Ih->setText(0, "C20Ih");
+
+    QTreeWidgetItem *C24 = new QTreeWidgetItem(treeWidget);
+    C24->setText(0, "C24");
+    QTreeWidgetItem *C24D6d = new QTreeWidgetItem(C24);
+    C24D6d->setText(0, "C24D6d");
+
+    QTreeWidgetItem *C26 = new QTreeWidgetItem(treeWidget);
+    C26->setText(0, "C26");
+    QTreeWidgetItem *C26D3h = new QTreeWidgetItem(C26);
+    C26D3h->setText(0, "C26D3h");
+    
+    QTreeWidgetItem *C28 = new QTreeWidgetItem(treeWidget);
+    C28->setText(0, "C28");
+    QTreeWidgetItem *C28D2 = new QTreeWidgetItem(C28);
+    C28D2->setText(0, "C28D2");
+    
+    QTreeWidgetItem *C30 = new QTreeWidgetItem(treeWidget);
+    C30->setText(0, "C30");
+    QTreeWidgetItem *C30D5h = new QTreeWidgetItem(C30);
+    C30D5h->setText(0, "C30D5h");
+    QTreeWidgetItem *C30C2v_1 = new QTreeWidgetItem(C30);
+    C30C2v_1->setText(0, "C30C2v_1");
+    QTreeWidgetItem *C30C2v_2 = new QTreeWidgetItem(C30);
+    C30C2v_2->setText(0, "C30C2v_2");
+    
+    // QTreeWidgetItem *subItem2 = new QTreeWidgetItem(mainItem);
+    // subItem2->setText(0, "Option 2");
+    // QTreeWidgetItem *subItem3 = new QTreeWidgetItem(mainItem);
+    // subItem3->setText(0, "Option 3");
+    layout->addWidget(treeWidget);
     layout->setStretch(0, 1);
     layout->setStretch(1, 0); 
+    connect(treeWidget, SIGNAL(itemClicked(QTreeWidgetItem*, int)), this, SLOT(onTreeItemClicked(QTreeWidgetItem*, int)));
+
 }
 
 
@@ -110,76 +144,11 @@ void BuilderWidget::draw_grid(QString filename)
         // r->addBondItem(item);
         scene->addItem(item);
     }
-    // QPolygonF ring;
-    // RingItem *r = new RingItem(QPoint(1,1));
-    // connect(r, SIGNAL(clicked(RingItem*)), this, SLOT(ringClicked(RingItem*)));
-    // ring << vertexXY2XY(QPoint(0,0)) << vertexXY2XY(QPoint(0,1)) << vertexXY2XY(QPoint(0,8)) << vertexXY2XY(QPoint(0,9)) << vertexXY2XY(QPoint(0,10)) << vertexXY2XY(QPoint(0,0));
-    
-    // r->setPolygon(ring);
-    // r->setOpacity(0.3);
-    // r->setZValue(-10);
-    // scene->addItem(r);
-    
-    // start here
-    // int len_x = 2;
-    // int len_y = 2;
-
-    // QPoint vertex_xys[7] = {QPoint(1,0), QPoint(0,-1), QPoint(-1,-1), QPoint(-1,0), QPoint(0,1), QPoint(1,1), QPoint(1,0)};
-
-    // for(int i=0; i<len_x; ++i)
-    // {
-    //     for(int j=0; j<len_y;++j)
-    //     {
-    //         QPoint ring_center = ringXY2vertexXY(QPoint(i,j));
-    //         QPolygonF ring;
-    //         RingItem *r = new RingItem(QPoint(i,j));
-    //         connect(r, SIGNAL(clicked(RingItem*)), this, SLOT(ringClicked(RingItem*)));
-    //         for(int k=0; k<6; ++k)
-    //         {
-    //             // creat a bond of ring from ring center
-    //             QPoint ver_1 = ring_center + vertex_xys[k];
-    //             QPoint ver_2 = ring_center + vertex_xys[k+1];
-    //             // save real position of v1 to ring
-    //             QPointF v1 = vertexXY2XY(ver_1,bondlength); // real position
-
-    //             EdgeModel edge(ver_1, ver_2);   // fake position but still transfer to real position in EdgeModel
-                
-    //             //edge using fake position
-    //             if (!edges.contains(edge))  
-    //             {   
-    //                 // 0,0 is distance of bottom of ring and bond, 0,0 mean overlap  
-    //                 item = new BondItem(0,0,bondlength, edge, BondItem::Grid);
-    //                 connect(item, SIGNAL(bondSelected(BondItem*)), this, SLOT(selectBond(BondItem*)));
-    //                 connect(item, SIGNAL(bondUnselected(BondItem*)), this, SLOT(unselectBond(BondItem*)));
-    //                 edges.insert(edge, item);
-    //                 r->addBondItem(item);
-    //                 scene->addItem(item);
-    //             }
-    //             else
-    //             {
-    //                 QHash<EdgeModel, BondItem*>::iterator eit=edges.find(edge);
-
-    //                 BondItem *item = eit.value();
-    //                 if (eit != edges.end())
-    //                 {
-    //                     r->addBondItem(item);
-    //                 }
-    //             }
-    //             ring << v1 ;
-    //         }
-    //         r->setPolygon(ring);
-    //         r->setOpacity(0.3);
-    //         r->setZValue(-10);
-    //         scene->addItem(r);
-    //     }
-    // }
-    // end here
     view->centerOn(scene->sceneRect().center());
-
 }
-void BuilderWidget::onListItemClicked(QListWidgetItem *item)
+void BuilderWidget::onTreeItemClicked(QTreeWidgetItem *item, int column)
 {
-    QString selectedItemText = item->text();
+    QString selectedItemText = item->text(column);
     if (selectedItemText == "C20Ih")
     {   
         Loadgraph("c20ih",2.0);
