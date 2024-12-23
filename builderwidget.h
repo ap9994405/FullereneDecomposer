@@ -19,6 +19,7 @@ class BuilderWidget : public QWidget
 public:
     BuilderWidget(QWidget *parent = 0);
     virtual ~BuilderWidget();
+    QString ch2subscript(const QString &input);
 private:
     ZoomableView *view;
     BuilderScene *scene;
@@ -26,6 +27,9 @@ private:
     QSet<BondItem*> m_selected_edges;
     QSet<RingItem*> m_selected_rings;
     QTreeWidget *treeWidget;
+    QString n_foldername;
+    QString n_filename;
+
 signals:
     void modified();
     void ZZPolynomialRequest(GraphModel*);
@@ -39,12 +43,12 @@ private slots:
 public slots:
     // void ReadFile(QString filename);
     void clear();
-    void draw_grid(QString filename);
+    void draw_grid(QString foldername, QString filename);
     QList<EdgeModel> getGraph();
     GraphModel* getGraphModel();
     void setGridRotate(bool rotate);
     void SelectAllGraph();
-    void Loadgraph(const QString& graphName, double graphSize);
+    void Loadgraph(const QString& foldername, QString& graphName, double graphSize);
 protected:
 
 };

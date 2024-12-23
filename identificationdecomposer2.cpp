@@ -1,4 +1,4 @@
-#include "identificationdecomposer.h"
+#include "identificationdecomposer2.h"
 
 #include <QStandardItemModel>
 #include <QStandardItem>
@@ -9,7 +9,7 @@
 #include "graphdelegate.h"
 
 #include "identificationmodelmanager.h"
-#include "decomposerdialog.h"
+#include "decomposerdialog2.h"
 #include "tagmodificationdialog.h"
 #include "undoredomanager.h"
 
@@ -19,7 +19,7 @@
 // commands
 #include "widthidentifycommand.h"
 #include "widthcombinecommand.h"
-#include "widthdecomposecommand.h"
+#include "widthdecomposecommand2.h"
 
 #include "uniquetaggenerator.h"
 #include "graphmodelgraphicsitem.h"
@@ -27,7 +27,7 @@
 
 #include "formats.h"
 
-IdentificationDecomposer::IdentificationDecomposer(QWidget *parent) :
+IdentificationDecomposer2::IdentificationDecomposer2(QWidget *parent) :
     QWidget(parent)
 {
     m_undoRedoManager = new UndoRedoManager();
@@ -81,27 +81,27 @@ IdentificationDecomposer::IdentificationDecomposer(QWidget *parent) :
 
 }
 
-IdentificationDecomposer::~IdentificationDecomposer()
+IdentificationDecomposer2::~IdentificationDecomposer2()
 {
 }
 
-void IdentificationDecomposer::setRootGraph(GraphModel *graphmodel)
+void IdentificationDecomposer2::setRootGraph(GraphModel *graphmodel)
 {
     m_manager->appendGraphModelToUnidentified(graphmodel);
 }
 
-void IdentificationDecomposer::clear()
+void IdentificationDecomposer2::clear()
 {
     m_manager->clear();
     m_undoRedoManager->clear();
 }
 
-QString IdentificationDecomposer::getZZPolynomial()
+QString IdentificationDecomposer2::getZZPolynomial()
 {
     return m_manager->getZZPolynomial();
 }
 
-void IdentificationDecomposer::unidentItemSelected(QModelIndex index)
+void IdentificationDecomposer2::unidentItemSelected(QModelIndex index)
 {
 
     if (m_unidentified->selectionModel()->selectedIndexes().size() == 1)
@@ -118,7 +118,7 @@ void IdentificationDecomposer::unidentItemSelected(QModelIndex index)
 
 
         UniqueTagGenerator *tagGenerator = new UniqueTagGenerator(*(m_manager->getUniqueTagGenerator()));
-        DecomposerDialog *w = new DecomposerDialog(m_manager->getUniqueTagGenerator());
+        DecomposerDialog2 *w = new DecomposerDialog2(m_manager->getUniqueTagGenerator());
 
 
         connect(w, SIGNAL(ZZPolynomialRequest(GraphModel*)), this, SLOT(childZZPolynomialRequest(GraphModel*)));
@@ -134,7 +134,7 @@ void IdentificationDecomposer::unidentItemSelected(QModelIndex index)
         if (w->result() == 1 && model->isBondSelected())
         {
             QList<GraphModel*> leafs = w->getLeafs();
-            ICommand* command = new WidthDecomposeCommand(this, m_manager, tagGenerator, index, leafs);
+            ICommand* command = new WidthDecomposeCommand2(this, m_manager, tagGenerator, index, leafs);
             command->Execute();
             m_undoRedoManager->addCommand(command);
             m_unidentified->update(index);
@@ -147,7 +147,7 @@ void IdentificationDecomposer::unidentItemSelected(QModelIndex index)
     }
 }
 
-void IdentificationDecomposer::identItemDoubleClicked(QModelIndex index)
+void IdentificationDecomposer2::identItemDoubleClicked(QModelIndex index)
 {
     if (m_identified->selectionModel()->selectedIndexes().size() == 1)
     {
@@ -161,7 +161,7 @@ void IdentificationDecomposer::identItemDoubleClicked(QModelIndex index)
     }
 }
 
-void IdentificationDecomposer::IdentifyButtonClicked()
+void IdentificationDecomposer2::IdentifyButtonClicked()
 {
     QModelIndexList list = m_unidentified->selectionModel()->selectedIndexes();
     ICommand *command = new WidthIdentifyCommand(m_manager->getUnidentifiedModel(),m_manager->getIdentifiedModel(),list);
@@ -170,7 +170,7 @@ void IdentificationDecomposer::IdentifyButtonClicked()
 
 }
 
-void IdentificationDecomposer::UnidentifyButtonClicked()
+void IdentificationDecomposer2::UnidentifyButtonClicked()
 {
     QModelIndexList list = m_identified->selectionModel()->selectedIndexes();
     ICommand *command = new WidthIdentifyCommand(m_manager->getIdentifiedModel(),m_manager->getUnidentifiedModel(),list);
@@ -178,7 +178,7 @@ void IdentificationDecomposer::UnidentifyButtonClicked()
     m_undoRedoManager->addCommand(command);
 }
 
-void IdentificationDecomposer::createUI()
+void IdentificationDecomposer2::createUI()
 {
     QSplitter* splitter = new QSplitter(this);
     m_unidentified = new QListView(this);
@@ -241,17 +241,17 @@ void IdentificationDecomposer::createUI()
     this->setLayout(layout);
 }
 
-void IdentificationDecomposer::identRightClick(QPoint point)
+void IdentificationDecomposer2::identRightClick(QPoint point)
 {
     confirmCombination(m_identified, point);
 }
-void IdentificationDecomposer::unidentRightClick(QPoint point)
+void IdentificationDecomposer2::unidentRightClick(QPoint point)
 {
     confirmCombination(m_unidentified, point);
 }
 
 
-bool IdentificationDecomposer::isomorphismCheck(QModelIndexList list)
+bool IdentificationDecomposer2::isomorphismCheck(QModelIndexList list)
 {
     int nBonds = 0;
     for(int i=0; i< list.size(); ++i)
@@ -273,7 +273,7 @@ bool IdentificationDecomposer::isomorphismCheck(QModelIndexList list)
     return true;
 }
 
-void IdentificationDecomposer::confirmCombination(QListView *target, QPoint point)
+void IdentificationDecomposer2::confirmCombination(QListView *target, QPoint point)
 {
     QPoint globalPos = target->mapToGlobal(point);
     QMenu myMenu;
@@ -362,17 +362,17 @@ void IdentificationDecomposer::confirmCombination(QListView *target, QPoint poin
     }
 }
 
-void IdentificationDecomposer::undo()
+void IdentificationDecomposer2::undo()
 {
     m_undoRedoManager->undo();
 }
 
-void IdentificationDecomposer::redo()
+void IdentificationDecomposer2::redo()
 {
     m_undoRedoManager->redo();
 }
 
-void IdentificationDecomposer::exportSVG()
+void IdentificationDecomposer2::exportSVG()
 {
     if (m_manager->getUnidentifiedModel()->rowCount() > 0)
     {
@@ -401,7 +401,7 @@ void IdentificationDecomposer::exportSVG()
 
 }
 
-void IdentificationDecomposer::childZZPolynomialRequest(GraphModel *model)
+void IdentificationDecomposer2::childZZPolynomialRequest(GraphModel *model)
 {
     emit ZZPolynomialRequest(model);
 }

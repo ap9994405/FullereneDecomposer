@@ -1,6 +1,4 @@
-
-#include "decomposer.h"
-#include "decomposer.h"
+#include "decomposer2.h"
 #include "identificationdecomposer.h"
 
 #include "layoutabletree.h"
@@ -14,7 +12,7 @@
 
 #include "graphitemconnectingline.h"
 
-#include "graphdecomposecommand.h"
+#include "graphdecomposecommand2.h"
 #include "uniquetaggenerator.h"
 
 #include <QtSvg>
@@ -24,7 +22,7 @@
 #include "gzip_helper.h"
 
 
-Decomposer::Decomposer(UniqueTagGenerator *tagGen, QWidget *parent): QWidget(parent)
+Decomposer2::Decomposer2(UniqueTagGenerator *tagGen, QWidget *parent): QWidget(parent)
 {
     //:QWidget(parent) might equal to this -> parent = parent
     m_rotateGrid = false;
@@ -45,9 +43,6 @@ Decomposer::Decomposer(UniqueTagGenerator *tagGen, QWidget *parent): QWidget(par
     // scene = new QGraphicsScene(-2000,-50, 4000, 8000, this);
     scene = new QGraphicsScene(this);
 
-    // scene->addLine(-2000,0,2000,0);
-    // scene->addLine(0,-2000,0,2000); 
-
     view = new ZoomableView(scene);
     view->setMouseTracking(true);
 
@@ -55,13 +50,13 @@ Decomposer::Decomposer(UniqueTagGenerator *tagGen, QWidget *parent): QWidget(par
     this->setLayout(layout);
 }
 
-Decomposer::~Decomposer()
+Decomposer2::~Decomposer2()
 {
     // clear();
 }
 
 // two getZZPolynomial is different with different # of parameter
-QString Decomposer::getZZPolynomial()   //getZZPolynomial under a class name Decomposer
+QString Decomposer2::getZZPolynomial()   //getZZPolynomial under a class name Decomposer
 {
     if (m_nodeMapping.contains(m_root_graph))   //m_nodeMapping is a QHash<GraphModel*, GraphModelTreeNode*>
     {
@@ -73,11 +68,11 @@ QString Decomposer::getZZPolynomial()   //getZZPolynomial under a class name Dec
     }
 }
 
-void Decomposer::setRootGraph(GraphModel *graph)    //Graphmodel defined in graphmodel
+void Decomposer2::setRootGraph(GraphModel *graph)    //Graphmodel defined in graphmodel
 {
     m_root_graph = graph;
 
-    m_root_graph->prepare();
+    m_root_graph->prepare2();
     connect(m_root_graph, SIGNAL(SelectionChanged(GraphModel*)), this, SLOT(graphSelectionChanged(GraphModel*)));
     //connect(sender, SIGNAL(signal()), receiver, SLOT(slot()));
     m_root_graph->setTag(m_tagGenerator->getTagFromModel(m_root_graph));
@@ -127,7 +122,7 @@ void Decomposer::setRootGraph(GraphModel *graph)    //Graphmodel defined in grap
     scene->setSceneRect(scene->itemsBoundingRect());
 }
 
-QList<GraphModel *> Decomposer::getLeafs()
+QList<GraphModel *> Decomposer2::getLeafs()
 {
     QList<GraphModel*> res;
 
@@ -162,7 +157,7 @@ QList<GraphModel *> Decomposer::getLeafs()
     return res;
 }
 
-void Decomposer::clear()
+void Decomposer2::clear()
 {
     m_tagGenerator->clear();
     if (m_root_graph!=NULL)
@@ -179,17 +174,17 @@ void Decomposer::clear()
     m_undoRedoManager->clear();
 }
 
-void Decomposer::setAllowFragments(bool enable)
+void Decomposer2::setAllowFragments(bool enable)
 {
     m_allowFragments = enable;
 }
 
-bool Decomposer::allowFragments()
+bool Decomposer2::allowFragments()
 {
     return m_allowFragments;
 }
 
-void Decomposer::exportSVG(QString filename, bool compressed)
+void Decomposer2::exportSVG(QString filename, bool compressed)
 {
     QSvgGenerator svgGen;
 
@@ -244,7 +239,7 @@ void Decomposer::exportSVG(QString filename, bool compressed)
 
 }
 
-void Decomposer::setGridRotate(bool rotate)
+void Decomposer2::setGridRotate(bool rotate)
 {
     m_rotateGrid = rotate;
     QListIterator<GraphModelTreeNode*> it(m_nodeMapping.values());
@@ -259,12 +254,12 @@ void Decomposer::setGridRotate(bool rotate)
     }
 }
 
-void Decomposer::reposition()
+void Decomposer2::reposition()
 {
     m_graphtree->reposition();
 }
 
-void Decomposer::graphSelectionChanged(GraphModel *model)
+void Decomposer2::graphSelectionChanged(GraphModel *model)
 {
 //    qDebug() << model->isBondSelected() ;
 //    if (model->isBondSelected())
@@ -274,7 +269,7 @@ void Decomposer::graphSelectionChanged(GraphModel *model)
 
     if (  model->isBondSelected() )
     {
-        ICommand* command = new GraphDecomposeCommand(this, model);
+        ICommand* command = new GraphDecomposeCommand2(this, model);
         command->Execute();
     }
     else
@@ -303,7 +298,7 @@ void Decomposer::graphSelectionChanged(GraphModel *model)
 
 }
 
-void Decomposer::addChild(GraphModel *parent, GraphModel *child)
+void Decomposer2::addChild(GraphModel *parent, GraphModel *child)
 {
 
     child->setTag(m_tagGenerator->getTagFromModel(child));
@@ -336,12 +331,12 @@ void Decomposer::addChild(GraphModel *parent, GraphModel *child)
     m_nodeMapping[child]=node;
 }
 
-void Decomposer::tagChanged()
+void Decomposer2::tagChanged()
 {
     m_graphtree->reposition();
 }
 
-QString Decomposer::getZZPolynomial(GraphModelTreeNode *node)   //m_nodeMapping[m_root_graph] == GraphModelTreeNode
+QString Decomposer2::getZZPolynomial(GraphModelTreeNode *node)   //m_nodeMapping[m_root_graph] == GraphModelTreeNode
 {
     GraphModel* model = node->getModel();   
     QStringList list;
@@ -411,7 +406,7 @@ QString Decomposer::getZZPolynomial(GraphModelTreeNode *node)   //m_nodeMapping[
     }
 }
 
-void Decomposer::childZZPolynomialRequest(GraphModel *model)
+void Decomposer2::childZZPolynomialRequest(GraphModel *model)
 {
     emit ZZPolynomialRequest(model);
 }

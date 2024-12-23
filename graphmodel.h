@@ -29,6 +29,7 @@ signals:
     void TagChanged(GraphModel* model);
 public slots:
     QList<GraphModel*> getDaughters(EdgeModel edge);
+    QList<GraphModel*> getDaughters2(EdgeModel edge);
     void selectBond(EdgeModel edge);
     void unselectBond();
     bool isBondSelected();
@@ -36,8 +37,10 @@ public slots:
     QList<GraphModel*> getFragments();
     QString getZZInput(bool connections) const;
     QString getZZInput2(bool connections, bool hydrogens) const;
+    void setmode(int mode);
     void setDead(bool isDead);
     void prepare();
+    void prepare2();
 
 public:
 
@@ -49,6 +52,9 @@ public:
     QString getTag();
     QString getCustomTag();
     QString getFullTag();
+    QString getfolderename();
+    QString getfilename();
+    void setFilename(QString foldername, QString filename);
     bool isDead();
     bool isEmpty();
     bool isFinished();
@@ -71,19 +77,25 @@ public:
     bool addLink(const QList<QPair<int, int>> & links);
     QList<QList<EdgeModel> > getAllRings() const;
     QList<EdgeModel> m_hidden_edges; //change 2018/6/11
-private slots:   
+    QString m_foldername;
+    QString m_filename;
+private slots:
 
     GraphModel* getNoBondDaughter(EdgeModel edge);
     GraphModel* getNoAtomsDaughter(EdgeModel edge);
+    QList<GraphModel*> getNoRingDaughter(EdgeModel edge);
     QList<GraphModel*> getNoStarDaughter(EdgeModel edge, bool startstar = true, bool endstar = true);
 
 private:
     void cutDanglingBonds();
+    void cutDanglingBonds2();
     void removeAtoms(const EdgeModel &edge, QList<EdgeModel> &alive_edges, QList<EdgeModel> &dead_edges);
     QVector<QList<EdgeModel> > checkIfDisconnected(QList<EdgeModel> edges);
+    void addRing(const QList<EdgeModel> &bonds);
     void addStar(const QList<EdgeModel> &bonds);
     void addDoubleBond(const EdgeModel &line);
     QList<GraphModel*> split(const QVector<QList<EdgeModel> >& parts);
+    QList<QList<EdgeModel> > getRingEdges(EdgeModel edge);
     QList<QList<EdgeModel> > getStarEdges(EdgeModel edge, bool startstar, bool endstar);
     QList<EdgeModel> getTerminalStarEdges(QPoint TerminalStarCenter);
 
@@ -113,7 +125,7 @@ private:
     QVector<QList<EdgeModel> > m_parts;
     QList<GraphModel*> all_gm_chid;
     QList<QPoint> m_spin_point;
-
+    int m_mode;
     QString m_tag;
     QString m_customTag;
 };

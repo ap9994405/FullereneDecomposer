@@ -8,7 +8,9 @@
 class GraphModel;
 class BuilderWidget;
 class Decomposer;
+class Decomposer2;
 class IdentificationDecomposer;
+class IdentificationDecomposer2;
 class ZZPolynomialCalculatorPanel;
 class porsche;
 
@@ -34,7 +36,7 @@ private slots:
     void redo();
     void processZZPolynomialRequest(GraphModel* model);
     void builderProcessZZPolynomialRequest(GraphModel* model);
-    void setGridRotate(bool rotate);
+    //void setGridRotate(bool rotate);
     // void toggleSeparateFragments(bool isSeparated);
     void test();
     void screenshot();
@@ -51,7 +53,9 @@ private:
     QTabWidget *m_tabWidget;
     BuilderWidget *m_builder;
     Decomposer *m_decomposer;
+    Decomposer2 *m_decomposer2;
     IdentificationDecomposer *m_identDecomposer;
+    IdentificationDecomposer2 *m_identDecomposer2;
     ZZPolynomialCalculatorPanel *m_zzCalculatorPanel;
     porsche *m_porsche;
 

@@ -69,10 +69,9 @@ void ZZCalculatorJob::calcFinished()
     if (!m_calc->hasError())
     {
         m_result->setText(m_calc->getPoly().toString());
-        // m_result->setData(100,m_calc->getPoly().toString() + "\n" + m_calc->getTotal());
-        // m_result->setData(99,m_calc->getPoly().toHTML() + "<br>Total: " + m_calc->getTotal());
-        m_result->setData(99,"star polynomial <br>" + m_calc->getPoly().toHTML() + "<br>Total: " + m_calc->getTotal());
-        m_result->setData(98,"star polynomial <br>" + m_calc->getPoly().toHTML2() + "<br>Total: " + m_calc->getTotal());
+
+        m_result->setData(99,"<font color='#f29e02'>star polynomial</font> <br>" + m_calc->getPoly().toHTML()  + "<br>Total: " + m_calc->getTotal()+ "<br><br>" + "<font color='#008b1e'>GZZ polynomial</font> <br>" + m_calc->getPoly2().toHTML2() + "<br>Total: " + m_calc->getTotal2() + "<br><br><font color='#0e7fed'>ZZ polynomial</font><br>" + m_calc->getPoly2().toHTML3() + "<br>Total: " + m_calc->getTotal3());
+        m_result->setData(98,"<font color='#f29e02'>star polynomial</font> <br>" + m_calc->getPoly().toHTML_maple()  + "<br>Total: " + m_calc->getTotal() + "<br><br>" + "<font color='#008b1e'>GZZ polynomial</font> <br>" + m_calc->getPoly2().toHTML2_maple() + "<br>Total: " + m_calc->getTotal2() + "<br><br><font color='#0e7fed'>ZZ polynomial</font><br>" + m_calc->getPoly2().toHTML3_maple() + "<br>Total: " + m_calc->getTotal3());
         if (m_calc->getPoly().toString() == "0" )
         {
             m_ori_model->setDead(true);

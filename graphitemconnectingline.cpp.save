@@ -17,35 +17,35 @@ GraphItemConnectingLine::GraphItemConnectingLine(
     m_textRect->setBrush(QBrush(QColor(Qt::white)));
     m_text = new QGraphicsTextItem(m_textRect);
     GraphModel::DecompositionType type = child->getGraphicsItem()->getModel()->getType();
-    QColor textColor;
+    QColor newColor;
 
     if (type == GraphModel::Single)
     {
-        textColor.setNamedColor("#9d9d9d");
+        textColor.setNamedColor("#FF9797");
         m_text->setDefaultTextColor(textColor);
         m_text->setPlainText(tr("S"));
     }
     else if (type == GraphModel::Double)
     {
-        textColor.setNamedColor("#9d9d9d");
+        textColor.setNamedColor("#FF9797");
         m_text->setDefaultTextColor(textColor);
         m_text->setPlainText(tr("D"));
     }
     else if (type == GraphModel::Star)
     {
-        textColor.setNamedColor("#FF6060");
+        textColor.setNamedColor("#FF9797");
         m_text->setDefaultTextColor(textColor);
         m_text->setPlainText(tr("T"));
     }
     else if (type == GraphModel::Ring)
     {
-        textColor.setNamedColor("#FF6060");
+        textColor.setNamedColor("#FF9797");
         m_text->setDefaultTextColor(textColor);
         m_text->setPlainText(tr("R"));
     }
     else if (type == GraphModel::Fragment)
     {
-        textColor.setNamedColor("#9d9d9d");
+        textColor.setNamedColor("#FF9797");
         m_text->setPlainText(tr("F"));
     }
     QFont font;

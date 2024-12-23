@@ -5,8 +5,8 @@
 #include <cmath>
 #include "edgemodel.h"
 
-void readschlegel(QString filename);
-void readxyz(QString filename);
+void readschlegel(QString foldername, QString filename);
+void readxyz(QString foldername, QString filename);
 void setgraphsize(double m_size = 1.0);
 QPoint ringXY2vertexXY(QPoint old_p);
 
@@ -25,5 +25,5 @@ void getRingCenters(const QList<QList<EdgeModel> >& rings, QList<QPointF> &ring_
 
 bool compareQPointF(const QPointF& p1, const QPointF& p2);
 bool isIsomorphic(const QList<QPointF> &graph1, const QList<QPointF> &graph2);
-
+QString subscript2ch(const QString &input);
 #endif // UTILS_H

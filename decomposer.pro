@@ -24,11 +24,15 @@ SOURCES += main.cpp\
     layoutabletree.cpp \
     layoutabletreenode.cpp \
     decomposer.cpp \
+    decomposer2.cpp \
     graphitemconnectingline.cpp \
     graphdecomposecommand.cpp \
+    graphdecomposecommand2.cpp \
     undoredomanager.cpp \
     identificationdecomposer.cpp \
+    identificationdecomposer2.cpp \
     decomposerdialog.cpp \
+    decomposerdialog2.cpp \
     identificationmodelmanager.cpp \
     dragdroplistview.cpp \
     uniquetaggenerator.cpp \
@@ -38,6 +42,7 @@ SOURCES += main.cpp\
     widthidentifycommand.cpp \
     widthcombinecommand.cpp \
     widthdecomposecommand.cpp \
+    widthdecomposecommand2.cpp \
     zzpolynomialcalculator.cpp \
     zzpolynomialcalculatorpanel.cpp \
     zzcalculatorjob.cpp \
@@ -74,13 +79,17 @@ HEADERS  += mainwindow.h \
     layoutabletree.h \
     layoutabletreenode.h \
     decomposer.h \
+    decomposer2.h \
     graphitemconnectingline.h \
     layoutabletree.h \
     graphdecomposecommand.h \
+    graphdecomposecommand2.h \
     undoredomanager.h \
     identificationdecomposer.h \
+    identificationdecomposer2.h \
     graphdelegate.h \
     decomposerdialog.h \
+    decomposerdialog2.h \
     identificationmodelmanager.h \
     dragdroplistview.h \
     uniquetaggenerator.h \
@@ -90,6 +99,7 @@ HEADERS  += mainwindow.h \
     widthidentifycommand.h \
     widthcombinecommand.h \
     widthdecomposecommand.h \
+    widthdecomposecommand2.h \
     zzpolynomialcalculator.h \
     zzpolynomialcalculatorpanel.h \
     basegraphdelegate.h \

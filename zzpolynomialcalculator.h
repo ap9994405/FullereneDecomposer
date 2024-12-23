@@ -13,7 +13,10 @@ class ZZPolynomialCalculator : public QThread
 public:
     ZZPolynomialCalculator(GraphModel* model, QObject *parent = 0);
     Polynomial<QString> getPoly();
+    Polynomial<QString> getPoly2();
     QString getTotal() const;
+    QString getTotal2() const;
+    QString getTotal3() const;
 
 
     bool hasError();
@@ -22,6 +25,7 @@ public:
     void serialRun();
 protected:
     void run();
+    void run2();
 signals:
     void resultReady(const QString &s);
 public slots:
@@ -31,7 +35,11 @@ private slots:
 private:
     GraphModel* m_model;
     Polynomial<QString> m_poly;
+    Polynomial<QString> m_poly2;
     QString m_total;
+    QString m_total2;
+    QString m_total_gzz;
+    QString m_total_zz;
     bool m_hasError;
     QString m_errorMsg;
     QProcess *m_process;

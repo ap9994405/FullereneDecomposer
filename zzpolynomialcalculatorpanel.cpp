@@ -23,7 +23,7 @@ ZZPolynomialCalculatorPanel::ZZPolynomialCalculatorPanel(QWidget *parent) :
     m_tableView->horizontalHeader()->hide();
 
     m_tableView->setShowGrid(false);
-    GraphDelegate<GraphModelGraphicsItem2> *gd = new GraphDelegate<GraphModelGraphicsItem2>(m_tableView, false, this);
+    GraphDelegate<GraphModelGraphicsItem2> *gd = new GraphDelegate<GraphModelGraphicsItem2>(m_tableView, false, this);  // bug here
     gd->setDrawRect(false);
     m_tableView->setItemDelegateForColumn(1,gd);
     m_tableView->setItemDelegateForColumn(2,new ZZPolynomialResultDelegate());
@@ -38,6 +38,7 @@ ZZPolynomialCalculatorPanel::ZZPolynomialCalculatorPanel(QWidget *parent) :
 
 
     m_tableView->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    m_tableView->verticalHeader()->setDefaultSectionSize(300);
 
 
 //    m_tableView->horizontalHeader()->setResizeMode(QHeaderView::Fixed);
@@ -49,7 +50,9 @@ ZZPolynomialCalculatorPanel::ZZPolynomialCalculatorPanel(QWidget *parent) :
 
 void ZZPolynomialCalculatorPanel::addRow(GraphModel *model)
 {
+    //readschlegel(model -> getfolderename(),model -> getfilename());
     GraphModel* newmodel = new GraphModel(model->getEdges(),QList<EdgeModel>(),NULL,GraphModel::None,NULL);
+    newmodel -> setFilename(model -> getfolderename(), model -> getfilename());
     ZZCalculatorJob *job =  new ZZCalculatorJob(newmodel, model);
     m_jobs.append(job);
     m_tableView->insertRow(0);
@@ -57,7 +60,7 @@ void ZZPolynomialCalculatorPanel::addRow(GraphModel *model)
     m_tableView->setItem(0,2,job->getResultItem());
     QTableWidgetItem *item = new QTableWidgetItem();
     item->setData(99,qVariantFromValue((void*)newmodel));
-    m_tableView->setItem(0,1,item);
+    m_tableView->setItem(0,1,item);     // here
 
     connect(job, SIGNAL(removed(ZZCalculatorJob*)), this, SLOT(jobRemoved(ZZCalculatorJob*)));
     connect(job, SIGNAL(updated(ZZCalculatorJob*)), this, SLOT(jobUpdated(ZZCalculatorJob*)));
@@ -84,5 +87,21 @@ void ZZPolynomialCalculatorPanel::addRowAndRun(GraphModel *model)
 {
     addRow(model);
     m_jobs.last()->start();
+}
+
+void ZZPolynomialCalculatorPanel::setFilename(QString foldername, QString filename)
+{
+    m_foldername = foldername;
+    m_filename = filename;
+}
+
+QString ZZPolynomialCalculatorPanel::getfolderename()
+{
+    return m_foldername;
+}
+
+QString ZZPolynomialCalculatorPanel::getfilename()
+{
+    return m_filename;
 }
 

@@ -15,6 +15,7 @@ class IdentificationModelManager : public QObject
     Q_OBJECT
     friend class WidthCombineCommand;
     friend class WidthDecomposeCommand;
+    friend class WidthDecomposeCommand2;
 public:
     explicit IdentificationModelManager(QObject *parent = 0);
     

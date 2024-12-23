@@ -188,13 +188,13 @@ void GraphModelGraphicsItem::createMolecule()
     QPainterPath starpath;
     QListIterator<QList<EdgeModel> > sit(m_model->getStars());
     while(sit.hasNext())
-    {   
+    {
         // using hash counting number of point and find center witch is counted three times
         const QList<EdgeModel> &bonds = sit.next();
         QPointF starbond;
         QHash<QPointF,int> count;
         for(int i=0; i<bonds.size(); ++i)
-        {   
+        {
             if (!m_edge_bond_mapping.contains(bonds[i]))
                 return;
             BondItem* bond = m_edge_bond_mapping[bonds[i]];
@@ -211,28 +211,72 @@ void GraphModelGraphicsItem::createMolecule()
     starpaths->setPen(star_line);
     m_bondGroup->addToGroup(starpaths);
 
-    QListIterator<QList<EdgeModel> > rit(m_model->getRings());
+    QPainterPath ringpath;
 
+    QListIterator<QList<EdgeModel> > rit(m_model->getRings());
     while(rit.hasNext())
     {
         const QList<EdgeModel>& bonds = rit.next();
-        QPointF center;
+        QPointF center,gradient;
+        qreal dis,tmpdis,bl,tau;
+        QList<QPointF> members;
+        members.reserve(6);
+        dis =9999.0;
         for(int i=0; i<bonds.size(); ++i)
         {
             if (!m_edge_bond_mapping.contains(bonds[i]))
                 return;
             BondItem* bond = m_edge_bond_mapping[bonds[i]];
             center += bond->mapToScene(bond->boundingRect().center());
+            members.append(bond->mapToScene(bond->boundingRect().center()));
+            ringpath.moveTo(bond->getStartPoint().x(),bond->getStartPoint().y());
+            ringpath.lineTo(bond->getEndPoint().x(),bond->getEndPoint().y());
         }
+        if (members.size() > 6) qDebug() << "wronggg";
         center /= 6.0;
-        QGraphicsEllipseItem *ring =  new QGraphicsEllipseItem(center.x()-15.0, center.y()-15.0, 30, 30, this);
+            for(int i=0; i<bonds.size(); ++i)
+            {
+                tmpdis = pow(pow(center.x()-members[i].x(),2)+pow(center.y()-members[i].y(),2),0.5);
+                if (tmpdis < dis)
+                {
+                dis = tmpdis;
+                }
+            }
+        for (int j=0;j <100 ; ++j)
+        {
+            gradient.setX(0.0);
+            gradient.setY(0.0);
+            tau = 0.0;
+            for(int i=0; i<bonds.size(); ++i)
+            {
+                bl = pow(pow(center.x()-members[i].x(),2)+pow(center.y()-members[i].y(),2),0.5);
+                gradient.setX(gradient.x() + 2*(bl-dis)/bl*(center.x()-members[i].x()));
+                gradient.setY(gradient.y() + 2*(bl-dis)/bl*(center.y()-members[i].y()));
+                tau = tau + pow((bl-dis),2);
+            }
+            //qDebug() <<tau<<gradient.x()<<gradient.y();
+            center.setX(center.x() - gradient.x()*0.01);
+            center.setY(center.y() - gradient.y()*0.01);
+        }
+
+        QGraphicsEllipseItem *ring =  new QGraphicsEllipseItem(center.x()-dis*0.4, center.y()-dis*0.4, dis*0.8, dis*0.8, this);
+        //QGraphicsEllipseItem *ring =  new QGraphicsEllipseItem(center.x()-15.0, center.y()-15.0, 30, 30, this);
         QPen pen;
-        pen.setColor(QColor("#d0d0d0"));     //改ring顏色
+        pen.setColor(QColor("#FF9797"));     // ring color
+        //pen.setColor(QColor("#d0d0d0"));
         pen.setCapStyle(Qt::RoundCap);
         pen.setWidth(5);
         ring->setPen(pen);
         m_bondGroup->addToGroup(ring);
     }
+    QGraphicsPathItem *ringpaths = new QGraphicsPathItem(ringpath);
+    QPen ring_line;
+    ring_line.setColor(QColor("#FF9797"));  //#ffffff white
+    ring_line.setWidth(5);
+    ring_line.setCapStyle(Qt::RoundCap);
+    ringpaths->setPen(ring_line);
+    m_bondGroup->addToGroup(ringpaths);
+
 
     QRectF rect = m_bondGroup->boundingRect();
     double x = rect.x();
@@ -304,7 +348,6 @@ void GraphModelGraphicsItem::unselectBonds()
 {
     m_selected_marker->setPos(0,0);
     m_selected_bond = NULL;
-//    qDebug() << "GraphModelGraphicsItem::unselectBond";
     QListIterator<BondItem*> it(m_bonditems);
     while(it.hasNext())
     {
@@ -320,7 +363,6 @@ void GraphModelGraphicsItem::unselectBonds()
 void GraphModelGraphicsItem::selectBond(EdgeModel bond)
 {
     unselectBonds();
-//    qDebug() << "GraphModelGraphicsItem::selectBond";
     if (m_edge_bond_mapping.contains(bond))
     {
         m_edge_bond_mapping[bond]->setSelection(true);
@@ -378,7 +420,7 @@ void GraphModelGraphicsItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *ev
         QAction *ZZ = new QAction(tr("ZZ"),this);
         if (!m_model->isFinished())
         {
-            ZZ = myMenu.addAction("Compute ZZ polynomial...");
+            ZZ = myMenu.addAction("Compute polynomial...");
         }
 //        QAction *debug =  myMenu.addAction("Select for debuging...");
         QAction *export_as = myMenu.addAction("Export structure as...");

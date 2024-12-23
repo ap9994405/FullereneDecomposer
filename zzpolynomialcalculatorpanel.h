@@ -13,6 +13,9 @@ class ZZPolynomialCalculatorPanel : public QWidget
     Q_OBJECT
 public:
     explicit ZZPolynomialCalculatorPanel(QWidget *parent = 0);
+    void setFilename(QString foldername, QString filename);
+    QString getfolderename();
+    QString getfilename();
 
 
 signals:
@@ -26,6 +29,8 @@ private slots:
 private:
     QTableWidget* m_tableView;
     QList<ZZCalculatorJob*> m_jobs;
+    QString m_foldername;
+    QString m_filename;
 };
 
 #endif // ZZPOLYNOMIALCALCULATORPANEL_H

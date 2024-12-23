@@ -1,7 +1,7 @@
 #include "graphmodeldisplaywidget.h"
 #include "graphmodelgraphicsitem2.h"
 #include "zoomableview.h"
-
+// not working file 20240324 porsche2
 GraphModelDisplayWidget::GraphModelDisplayWidget(GraphModel* model, QWidget *parent) :
     QWidget(parent), m_model(model)
 {

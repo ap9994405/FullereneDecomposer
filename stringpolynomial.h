@@ -11,11 +11,13 @@ template<>
 class Polynomial<QString>
 {
     typedef QPair<QString,unsigned> Term;
-    
+    typedef std::tuple <QString, unsigned, unsigned> GTerm;
+
 public:
     void clear()
     {
         m_terms.clear();
+        m_gterms.clear();
     }
 
     Polynomial<QString>(){}
@@ -23,6 +25,7 @@ public:
     Polynomial<QString>(const Polynomial<QString>& rhs)
     {
         m_terms = rhs.m_terms;
+        m_gterms = rhs.m_gterms;
     }
     void addTerm(QString coeff,unsigned order)
     {
@@ -49,6 +52,33 @@ public:
         if (!found_term)
         {
             m_terms.push_back(qMakePair(coeff,order));
+        }
+    }
+
+    void addTerm2(QString coeff,unsigned order_x,unsigned order_y)
+    {
+        if (coeff == 0) return;
+        bool found_term = false;
+        QList<GTerm>::iterator p;
+        for(p=m_gterms.begin();p!=m_gterms.end();++p)
+        {
+            GTerm& gterm = *p;
+            if (std::get<1>(gterm) == order_x && std::get<2>(gterm) == order_y )//|| std::get<2>(gterm) == order_y
+            {
+                std::get<0>(gterm) += coeff;
+                found_term = true;
+                break;
+            }
+            else if (std::get<1>(gterm) < order_x || std::get<2>(gterm) < order_y)
+            {
+                m_gterms.insert(p,std::make_tuple(coeff, order_x, order_y));
+                found_term = true;
+                break;
+            }
+        }
+        if (!found_term)
+        {
+            m_gterms.push_back(std::make_tuple(coeff, order_x, order_y));
         }
     }
 
@@ -196,12 +226,11 @@ public:
         return list.join(" + ");
     }
 
-    QString toHTML2() const
+    QString toHTML_maple() const
     {
         QStringList list;
         if ( m_terms.isEmpty() )
         {
-            // qDebug() << "m_terms is Empty";
             list.append("0");
         }
         else
@@ -241,7 +270,316 @@ public:
         return list.join(" + ");
     }
 
+    QString toHTML2() const
+    {
+        QStringList list;
+        if ( m_gterms.isEmpty() )
+        {
+            list.append("0");
+        }
+        else
+        {
+            QListIterator<GTerm> it(m_gterms);
+            while(it.hasNext())
+            {
+                const GTerm& gterm = it.next();
+                if ( std::get<1>(gterm) >1 && std::get<2>(gterm) >1)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x</i><sup>%1</sup><i>y</i><sup>%2</sup>").arg(std::get<1>(gterm)).arg(std::get<2>(gterm)));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>x</i><sup>%2</sup><i>y</i><sup>%3</sup>").arg(std::get<0>(gterm)).arg(std::get<1>(gterm)).arg(std::get<2>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 1 &&  std::get<2>(gterm) > 1)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x</i><i>y</i><sup>%1</sup>").arg(std::get<2>(gterm)));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>x</i><i>y</i><sup>%2</sup>").arg(std::get<0>(gterm)).arg(std::get<2>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) > 1 && std::get<2>(gterm) == 1)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x</i><sup>%1</sup><i>y</i>").arg(std::get<1>(gterm)));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>x</i><sup>%2</sup><i>y</i>").arg(std::get<0>(gterm)).arg(std::get<1>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 1 && std::get<2>(gterm) == 1)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x</i><i>y</i>"));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>x</i><i>y</i>").arg(std::get<0>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 0 && std::get<2>(gterm) > 1)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>y</i><sup>%1</sup>").arg(std::get<2>(gterm)));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>y</i><sup>%2</sup>").arg(std::get<0>(gterm)).arg(std::get<2>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) > 1 && std::get<2>(gterm) == 0)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x</i><sup>%1</sup>").arg(std::get<1>(gterm)));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>x</i><sup>%2</sup>").arg(std::get<0>(gterm)).arg(std::get<1>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 1 && std::get<2>(gterm) == 0)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x</i>"));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>x</i>").arg(std::get<0>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 0 && std::get<2>(gterm) == 1)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>y</i>"));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>y</i>").arg(std::get<0>(gterm)));
+                    }
+                }
+                else
+                {
+                    list.append(QString("%1").arg(std::get<0>(gterm)));
+                }
+            }
+        }
+        return list.join(" + ");
+    }
+
+    QString toHTML3() const
+    {
+        QStringList list;
+        if ( m_gterms.isEmpty() )
+        {
+            list.append("0");
+        }
+        else
+        {
+            QListIterator<GTerm> it(m_gterms);
+            while(it.hasNext())
+            {
+                const GTerm& gterm = it.next();
+                //get<0>(gterm) = coeff, get<1>(gterm) = order_x get<2>(gterm) = order_y
+                if ( std::get<1>(gterm) > 1 && std::get<2>(gterm) == 0)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x</i><sup>%1</sup>").arg(std::get<1>(gterm)));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>x</i><sup>%2</sup>").arg(std::get<0>(gterm)).arg(std::get<1>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 1 && std::get<2>(gterm) == 0)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x</i>"));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>x</i>").arg(std::get<0>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 0 && std::get<2>(gterm) == 0)
+                {
+                    list.append(QString("%1").arg(std::get<0>(gterm)));
+                }
+            }
+        }
+        return list.join(" + ");
+    }
+
+    QString toHTML2_maple() const
+    {
+        QStringList list;
+        if ( m_gterms.isEmpty() )
+        {
+            list.append("0");
+        }
+        else
+        {
+            QListIterator<GTerm> it(m_gterms);
+            while(it.hasNext())
+            {
+                const GTerm& gterm = it.next();
+                if ( std::get<1>(gterm) >1 && std::get<2>(gterm) >1)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x^</i>%1<i>*y^</i>%2").arg(std::get<1>(gterm)).arg(std::get<2>(gterm)));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>*x^</i>%2<i>*y^</i>%3").arg(std::get<0>(gterm)).arg(std::get<1>(gterm)).arg(std::get<2>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 1 &&  std::get<2>(gterm) > 1)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x</i><i>*y^</i>%1").arg(std::get<2>(gterm)));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>*x</i><i>*y^</i>%2").arg(std::get<0>(gterm)).arg(std::get<2>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) > 1 && std::get<2>(gterm) == 1)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x^</i>%1<i>*y</i>").arg(std::get<1>(gterm)));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>*x^</i>%2<i>*y</i>").arg(std::get<0>(gterm)).arg(std::get<1>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 1 && std::get<2>(gterm) == 1)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x</i><i>*y</i>"));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>*x</i><i>*y</i>").arg(std::get<0>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 0 && std::get<2>(gterm) > 1)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>y^</i>%1").arg(std::get<2>(gterm)));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>*y^</i>%2").arg(std::get<0>(gterm)).arg(std::get<2>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) > 1 && std::get<2>(gterm) == 0)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x^</i>%1").arg(std::get<1>(gterm)));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>*x^</i>%2").arg(std::get<0>(gterm)).arg(std::get<1>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 1 && std::get<2>(gterm) == 0)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x</i>"));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>*x</i>").arg(std::get<0>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 0 && std::get<2>(gterm) == 1)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>y</i>"));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>*y</i>").arg(std::get<0>(gterm)));
+                    }
+                }
+                else
+                {
+                    list.append(QString("%1").arg(std::get<0>(gterm)));
+                }
+            }
+        }
+        return list.join(" + ");
+    }
+
+    QString toHTML3_maple() const
+    {
+        QStringList list;
+        if ( m_gterms.isEmpty() )
+        {
+            list.append("0");
+        }
+        else
+        {
+            QListIterator<GTerm> it(m_gterms);
+            while(it.hasNext())
+            {
+                const GTerm& gterm = it.next();
+                if ( std::get<1>(gterm) > 1 && std::get<2>(gterm) == 0)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x^</i>%1").arg(std::get<1>(gterm)));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>*x^</i>%2").arg(std::get<0>(gterm)).arg(std::get<1>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 1 && std::get<2>(gterm) == 0)
+                {
+                    if (std::get<0>(gterm) == "1")
+                    {
+                        list.append(QString("<i>x</i>"));
+                    }
+                    else
+                    {
+                        list.append(QString("%1<i>*x</i>").arg(std::get<0>(gterm)));
+                    }
+                }
+                else if ( std::get<1>(gterm) == 0 && std::get<2>(gterm) == 0)
+                {
+                    list.append(QString("%1").arg(std::get<0>(gterm)));
+                }
+            }
+        }
+        return list.join(" + ");
+    }
 private:
     QList<Term> m_terms;
+    QList<GTerm> m_gterms;
 };
 #endif // STRINGPOLYNOMIAL_H

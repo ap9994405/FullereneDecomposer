@@ -10,9 +10,10 @@
 
 #include "graphmodeltag.h"
 #include "zzpolynomialcalculator.h"
-
+#include "utils.h"
 #include <QGraphicsItem>
 
+#include "builderwidget.h"
 const double bondlength = 30.0;
 const int tagSize = 40;
 
@@ -20,7 +21,6 @@ GraphModelGraphicsItem2::GraphModelGraphicsItem2(GraphModel *model, QGraphicsIte
 {
     this->setAcceptHoverEvents(true);
 //    this->setAcceptedMouseButtons(Qt::RightButton | Qt::LeftButton);
-
     m_tagItem = NULL;
     m_model = model;
     m_isHidden = false;
@@ -40,7 +40,6 @@ GraphModelGraphicsItem2::GraphModelGraphicsItem2(GraphModel *model, QGraphicsIte
 
 GraphModelGraphicsItem2::~GraphModelGraphicsItem2()
 {
-//    qDebug() << "GraphModelGraphicsItem::~GraphModelGraphicsItem()";
 //    delete m_delegate;
 }
 
@@ -51,10 +50,11 @@ void GraphModelGraphicsItem2::createInternels()
         QGraphicsItemGroup *g = new QGraphicsItemGroup(this);
         g->setHandlesChildEvents(false);
         m_bonditems.clear();
-
+        //bug here
+        // adding bond from correct text file instead from existing model
+        readschlegel(m_model -> getfolderename(),m_model -> getfilename());
         const QList<EdgeModel> &edges = m_model->getEdges();
         const QList<EdgeModel> &hidden_edges = m_model->getHiddenEdges();
-
         for(int i=0; i<edges.size(); ++i)
         {
             BondItem* bond = new BondItem(0,0,bondlength, edges[i], BondItem::Normal);
@@ -107,7 +107,6 @@ void GraphModelGraphicsItem2::setHidden(bool on)
 
 void GraphModelGraphicsItem2::unselectBonds()
 {
-//    qDebug() << "GraphModelGraphicsItem::unselectBond";
     QListIterator<BondItem*> it(m_bonditems);
     while(it.hasNext())
     {
@@ -123,7 +122,6 @@ void GraphModelGraphicsItem2::unselectBonds()
 void GraphModelGraphicsItem2::selectBond(EdgeModel bond)
 {
     unselectBonds();
-//    qDebug() << "GraphModelGraphicsItem::selectBond";
     if (m_edge_bond_mapping.contains(bond))
     {
         m_edge_bond_mapping[bond]->setSelection(true);
@@ -171,7 +169,6 @@ void GraphModelGraphicsItem2::updateFactor(const QString &HTMLCode)
         createFactor();
     else
         m_poly->setHtml(HTMLCode);
-
 }
 
 void GraphModelGraphicsItem2::createFactor()
@@ -194,13 +191,13 @@ void GraphModelGraphicsItem2::contextMenuEvent(QGraphicsSceneContextMenuEvent *e
         QGraphicsRectItem::contextMenuEvent(event);
         QPoint globalPos = event->screenPos();
         QMenu myMenu;
-        myMenu.addAction("Compute ZZ polynomial...");
+        myMenu.addAction("Compute polynomial...");
 
         QAction* selectedItem = myMenu.exec(globalPos);
         if (selectedItem)
         {
             emit ZZPolynomialRequest(m_model);
-        }        
+        }
     }
 }
 
@@ -240,5 +237,8 @@ void GraphModelGraphicsItem2::setTagVisible(bool visible)
     m_tagItem->setVisible(visible);
 }
 
-
-
+void GraphModelGraphicsItem2::setFilename(QString foldername, QString filename)
+{
+    m_foldername = foldername;
+    m_filename = filename;
+}

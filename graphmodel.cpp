@@ -17,8 +17,6 @@ inline uint qHash(const QPoint &key)
     return qHash(hkey);
 }
 
-
-
 bool GraphModel::isDisconnected()
 {
     return m_isDisconnected;
@@ -47,19 +45,19 @@ void GraphModel::setPoly(const Polynomial<long long> &poly)
 }
 
 QList<GraphModel *> GraphModel::getDaughters(EdgeModel edge)
-{   
+{
     QList<GraphModel *> res;
     QHash<QPoint, int> m_count;
     m_count.clear();
     // qDebug() << m_edges.size();
     for(int i=0; i<m_edges.size();++i)
-    {   
+    {
         // qDebug() << m_edges[i].startPoint() << m_edges[i].endPoint();
         m_count[m_edges[i].startPoint()] += 1;
         m_count[m_edges[i].endPoint()] += 1;
     }
     if (!(m_count.value(edge.startPoint()) == 1 || m_count.value(edge.endPoint())==1))
-    {   
+    {
         // qDebug() << m_count.value(edge.startPoint()) << m_count.value(edge.endPoint());
         res.append(getNoBondDaughter(edge));
     }
@@ -168,7 +166,7 @@ QList<GraphModel *> GraphModel::getDaughters(EdgeModel edge)
     if (startstar)
     {
         for (int i=1; i<=startneighbor2.size(); i++)
-        {   
+        {
             if (m_count.value(startneighbor2[i]) == 1)
             {
                 startstar = false;
@@ -192,6 +190,16 @@ QList<GraphModel *> GraphModel::getDaughters(EdgeModel edge)
         res.append(getNoAtomsDaughter(edge));
     }
     res.append(getNoStarDaughter(edge,startstar,endstar));
+    return res;
+}
+
+QList<GraphModel *> GraphModel::getDaughters2(EdgeModel edge)
+{
+    QList<GraphModel *> res;
+    res.append(getNoBondDaughter(edge));
+    res.append(getNoAtomsDaughter(edge));
+    res.append(getNoRingDaughter(edge));
+    //res.append(getNoBisringDaughter(edge));
     return res;
 }
 
@@ -272,11 +280,15 @@ GraphModel::GraphModel(const QList<EdgeModel> &edges, const QList<EdgeModel> &hi
     {
         m_doublebonds += modelParent->m_doublebonds;
         m_stars += modelParent->m_stars;
-        // m_rings += modelParent->m_rings;
+        m_rings += modelParent->m_rings;
         m_poly = modelParent->m_poly;
     }
     m_type = type;
     if (m_type == Star)
+    {
+        m_poly.multiplyTerm(1,1);
+    }
+    if (m_type == Ring)
     {
         m_poly.multiplyTerm(1,1);
     }
@@ -287,10 +299,6 @@ GraphModel::GraphModel(const QList<EdgeModel> &edges, const QList<EdgeModel> &hi
 
 }
 
-GraphModel::~GraphModel()
-{
-//    qDebug() << "GraphModel::~GraphModel";
-}
 void GraphModel::cutDanglingBonds()
 {
     bool cutAny = false;
@@ -311,7 +319,7 @@ void GraphModel::cutDanglingBonds()
         it.next();
         // qDebug() << it.value();
         if (it.value() == 1)
-        {   
+        {
             for(int i=0; i<m_edges.size();++i)
             {
                 if (it.key() == m_edges[i].startPoint())
@@ -342,7 +350,7 @@ void GraphModel::cutDanglingBonds()
         }
     }
     if (alone_atoms.size() > 0 )
-    {      
+    {
         for(int i=0; i<m_edges.size();++i)
         {
             for(int j=0; j<alone_atoms.size();++j)
@@ -386,12 +394,71 @@ void GraphModel::cutDanglingBonds()
                 }
                 cutAny = true;
                 m_poly.multiplyTerm(1,1);
+		// I believe problem is here
             }
         }
     }
     if (cutAny)
     {
         cutDanglingBonds();
+    }
+}
+
+GraphModel::~GraphModel()
+{
+//    qDebug() << "GraphModel::~GraphModel";
+}
+void GraphModel::cutDanglingBonds2()
+{
+    bool cutAny = false;
+    QHash<QPoint, int> count;
+    for(int i=0; i<m_edges.size();++i)
+    {
+        count[m_edges[i].startPoint()] += 1;
+        count[m_edges[i].endPoint()] += 1;
+    }
+    QHashIterator<QPoint, int> it(count);   //it.key() == QPoint, it.value() == int
+    QList<QPoint> alone_atoms;
+    QList<EdgeModel> alone_bonds;
+    while(it.hasNext())
+    {
+        it.next();
+        if (it.value() == 1)    //maybe it.value is # of neighbors
+        {
+            alone_atoms.append(it.key());
+        }
+
+    }
+    if (alone_atoms.size() > 0 )
+    {
+        for(int i=0; i<m_edges.size();++i)
+        {
+            for(int j=0; j<alone_atoms.size();++j)
+            {
+                if (m_edges[i].startPoint() == alone_atoms[j] ||
+                       m_edges[i].endPoint() == alone_atoms[j] )
+                {
+                    alone_bonds.append(m_edges[i]);
+                }
+            }
+        }
+
+        for(int i=0; i<alone_bonds.size();++i)
+        {
+            if (m_neighborlist.isAtomAlive(alone_bonds[i].startPoint()) &&
+                m_neighborlist.isAtomAlive(alone_bonds[i].endPoint()))
+            {
+                removeAtoms(alone_bonds[i],this->m_edges, this->m_hidden_edges);
+                addDoubleBond(alone_bonds[i]);
+                m_neighborlist.removeAtom(alone_bonds[i].startPoint());
+                m_neighborlist.removeAtom(alone_bonds[i].endPoint());
+                cutAny = true;
+            }
+        }
+    }
+    if (cutAny)
+    {
+        cutDanglingBonds2();
     }
 }
 
@@ -542,6 +609,135 @@ GraphModel *GraphModel::getNoAtomsDaughter(EdgeModel edge)
     GraphModel* gm_child = new GraphModel(all_edges, hidden_edges, this, GraphModel::Double, 0);
     gm_child->addDoubleBond(edge);
     return gm_child;
+}
+
+QList<GraphModel *> GraphModel::getNoRingDaughter(EdgeModel edge)
+{
+    QList<GraphModel*> rings;
+    QList<QList<EdgeModel> > pathes = getRingEdges(edge);
+
+    for(int i=0; i<pathes.size();++i)
+    {
+        QList<EdgeModel> all_edges = this->m_edges;
+        QList<EdgeModel> removed_edges = this->m_hidden_edges;
+        for(int j=0; j<pathes[i].size();++j)
+        {
+            removeAtoms(pathes[i][j],all_edges,removed_edges);
+        }
+        GraphModel* gm_child = new GraphModel(all_edges,removed_edges,this,GraphModel::Ring, 0);
+        gm_child->addRing(pathes[i]);
+        rings.append(gm_child);
+    }
+    return rings;
+}
+QList<QList<EdgeModel> > GraphModel::getRingEdges(EdgeModel edge)
+{
+    QList<QList<EdgeModel> > res;
+    QSet<EdgeModel> all_edges;
+    bool findneighbor = false;
+    bool findneighbor2 = false;
+    QPoint atom1,atom2,atom3,atom4,atom5,atom6;
+    atom1 = edge.startPoint();
+    atom2 = edge.endPoint();
+    for(int i=0; i<m_edges.size();++i)
+    {
+        all_edges.insert(m_edges[i]);
+    }
+    QList<EdgeModel> tmpPath;
+    EdgeModel edge2,edge3,edge4,edge5,edge6;
+    for(int i=0; i<m_edges.size();++i)  // find edge2
+    {
+        if (m_edges[i] == edge) {continue;}
+        if(edge.startPoint() == m_edges[i].startPoint())
+        {
+            edge2 = m_edges[i];
+            atom3 = edge2.endPoint();
+            findneighbor = true;
+        }
+        else if (edge.startPoint() == m_edges[i].endPoint())
+        {
+            edge2 = m_edges[i];
+            atom3 = edge2.startPoint();
+            findneighbor = true;
+        }
+        if (findneighbor)
+        {
+            findneighbor = false;
+            for(int j=0; j<m_edges.size();++j)  // find edge3
+            {
+                if(m_edges[j] == edge || m_edges[j] == edge2) {continue;}
+                if(m_edges[j].connected(edge2))
+                {
+                    edge3 = m_edges[j];
+                    if (edge3.connected(edge)){continue;}
+
+                    if (edge3.startPoint() == atom3){atom4 =edge3.endPoint();}
+                    else {atom4 =edge3.startPoint();}
+
+                    for(int k=0; k<m_edges.size();++k)  // find edge4
+                    {
+                        if (m_edges[k] == edge) {continue;}
+                        if(edge.endPoint() == m_edges[k].startPoint())
+                        {
+                            edge4 = m_edges[k];
+                            atom5 = edge4.endPoint();
+                            findneighbor2 = true;
+                        }
+                        else if (edge.endPoint() == m_edges[k].endPoint())
+                        {
+                            edge4 = m_edges[k];
+                            atom5 = edge4.startPoint();
+                            findneighbor2 = true;
+                        }
+
+                        if (findneighbor2)
+                        {
+                            findneighbor2 = false;
+                            for(int m=0; m<m_edges.size();++m)  // find edge5
+                            {
+                                if(m_edges[m] == edge || m_edges[m] == edge4) {continue;}
+                                if(m_edges[m].connected(edge4))
+                                {
+                                    edge5 = m_edges[m];
+                                    if (edge5.connected(edge)){continue;}
+                                    if (edge5.startPoint() == atom5){atom6 = edge5.endPoint();}
+                                    else {atom6 =edge5.startPoint();}
+                                    // if (edge5.connected(edge)){continue;}
+                                    // if (edge5.connected(edge3)){break;}
+                                    for(int l=0; l<m_edges.size();++l)
+                                    {
+                                        if (m_edges[l] == edge4 || m_edges[l] == edge5) {continue;}
+                                        if (m_edges[l].connected(edge3) && m_edges[l].connected(edge4)) {continue;}
+
+                                        if (m_edges[l].connected(edge3) && m_edges[l].connected(edge5))
+                                        {
+                                            edge6 = m_edges[l];
+                                            if (!(edge6.startPoint() == atom4 && edge6.endPoint() == atom6) && !(edge6.startPoint() == atom6 && edge6.endPoint() == atom4)) {continue;}
+                                            // if (edge.connected(edge2) && edge.connected(edge4) && edge2.connected(edge3) && edge4.connected(edge5))
+                                            // {
+                                                tmpPath.clear();
+                                                tmpPath << edge << edge2 << edge3 << edge4 << edge5 << edge6;
+                                                res.append(tmpPath);
+                                            // }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+    return res;
+}
+
+void GraphModel::addRing(const QList<EdgeModel>& bonds)
+{
+    if ( bonds.size() != 6 )
+        return ;
+    m_rings.append(bonds);
 }
 
 QList<GraphModel *> GraphModel::getNoStarDaughter(EdgeModel edge, bool startstar, bool endstar)
@@ -754,11 +950,11 @@ QString GraphModel::getZZInput2(bool connections, bool hydrogens) const
     QHash<QPoint, QPointF> l_hydrogens;
 
     int final_index = 0;
-    
+
     const std::array<QPoint, 3> vectors_opbenz = {{{-1,0}, {0,-1}, {1,1}}};
     const std::array<QPoint, 3> vectors_benz = {{{0,1}, {1,0}, {-1,-1}}};
     while(it.hasNext())
-    {   
+    {
         it.next();
         if (!this->m_neighborlist.isAtomAlive(it.key()))    //.isAtomAlive() return bool
             continue;
@@ -860,7 +1056,7 @@ QString GraphModel::getZZInput(bool connections) const
     QList<QVector3D> pos3d;
 
     while(it.hasNext())
-    {   
+    {
         it.next();
         // qDebug() <<it.key() << it.value();
         QVector3D new_p = vertexXY2XYZ(it.key());
@@ -874,7 +1070,7 @@ QString GraphModel::getZZInput(bool connections) const
     input.append(" ");
 
     for (int i=0;i<pos3d.size();i++)
-    {   
+    {
         QVector3D new_p = pos3d[i];
         input.append(QString("C %1 %2 %3").arg(new_p.x(),0,'f',6).arg(new_p.y(),0,'f',6).arg(new_p.z(),0,'f',6));
     }
@@ -883,7 +1079,7 @@ QString GraphModel::getZZInput(bool connections) const
         input.append(QString::number(m_edges.size()));
         int be,en;
         for(int i=0; i<m_edges.size();++i)
-        {   
+        {
             be = final_mapping.value(m_edges[i].startPoint().y());
             en = final_mapping.value(m_edges[i].endPoint().y());
             input.append(QString("%1 %2").arg(be).arg(en));
@@ -892,6 +1088,12 @@ QString GraphModel::getZZInput(bool connections) const
     // qDebug() <<input;
     return input.join("\n");
 }
+
+void GraphModel::setmode(int mode)
+{
+  m_mode = mode;
+}
+
 
 void GraphModel::setDead(bool isDead)
 {
@@ -922,9 +1124,41 @@ void GraphModel::prepare()
     }
 }
 
+void GraphModel::prepare2()
+{
+    cutDanglingBonds2();
+    if (m_neighborlist.numOfAtoms() == 0)
+    {
+        m_isFinished = true;
+    }
+    if (m_neighborlist.hasIsolatedAtom())
+        m_isDead = true;
 
+    if (!m_isDead || m_isFinished)
+    {
+        m_parts = checkIfDisconnected(m_edges);
+        if (m_parts.size()> 1)
+        {
+            m_isDisconnected = true;
+        }
+    }
+}
 
+void GraphModel::setFilename(QString foldername, QString filename)
+{
+    m_foldername = foldername;
+    m_filename = filename;
+}
 
+QString GraphModel::getfolderename()
+{
+    return m_foldername;
+}
+
+QString GraphModel::getfilename()
+{
+    return m_filename;
+}
 
 
 

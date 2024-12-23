@@ -8,7 +8,9 @@
 
 #include "builderwidget.h"
 #include "decomposer.h"
+#include "decomposer2.h"
 #include "identificationdecomposer.h"
+#include "identificationdecomposer2.h"
 
 #include "zzpolynomialcalculatorpanel.h"
 
@@ -18,10 +20,14 @@
 
 #include "formats.h"
 #include "file_helpers.h"
+#include "utils.h"
 
+//#include "graphmodelgraphicsitem.h"
+//#include "graphmodelgraphicsitem2.h"
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
 {
+
     setAttribute(Qt::WA_DeleteOnClose);
 
     m_workingGraphModel = NULL;
@@ -35,17 +41,25 @@ MainWindow::MainWindow(QWidget *parent) :
     m_tabWidget->addTab(m_builder, tr("Builder"));
 
     m_decomposer = new Decomposer(0,this);
-    m_tabWidget->addTab(m_decomposer, tr("Depth-mode Decomposer"));
-    
+    m_tabWidget->addTab(m_decomposer, tr("Depth-mode StarDecomposer"));
+
+    m_decomposer2 = new Decomposer2(0,this);
+    m_tabWidget->addTab(m_decomposer2, tr("Depth-mode ZZDecomposer"));
+
     m_identDecomposer = new IdentificationDecomposer(this);
-    m_tabWidget->addTab(m_identDecomposer, tr("Width-mode Decomposer"));
+    m_tabWidget->addTab(m_identDecomposer, tr("Width-mode StarDecomposer"));
+
+    m_identDecomposer2 = new IdentificationDecomposer2(this);
+    m_tabWidget->addTab(m_identDecomposer2, tr("Width-mode ZZDecomposer"));
 
     m_zzCalculatorPanel = new ZZPolynomialCalculatorPanel(this);
-    m_tabWidget->addTab(m_zzCalculatorPanel, tr("Star Polynomial Calculator"));
+    m_tabWidget->addTab(m_zzCalculatorPanel, tr("Polynomial Calculator"));
 
     connect(m_builder,SIGNAL(ZZPolynomialRequest(GraphModel*)),this, SLOT(builderProcessZZPolynomialRequest(GraphModel*)));
     connect(m_decomposer,SIGNAL(ZZPolynomialRequest(GraphModel*)),this,SLOT(processZZPolynomialRequest(GraphModel*)));
+    connect(m_decomposer2,SIGNAL(ZZPolynomialRequest(GraphModel*)),this,SLOT(processZZPolynomialRequest(GraphModel*)));
     connect(m_identDecomposer,SIGNAL(ZZPolynomialRequest(GraphModel*)),this,SLOT(processZZPolynomialRequest(GraphModel*)));
+    connect(m_identDecomposer2,SIGNAL(ZZPolynomialRequest(GraphModel*)),this,SLOT(processZZPolynomialRequest(GraphModel*)));
     connect(m_tabWidget, SIGNAL(currentChanged(int)), this, SLOT(tabPageChanged(int)));
 
     createActions();
@@ -57,7 +71,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
 void MainWindow::tabPageChanged(int index)
 {
-    if (index == 2) // for Width-mode Decomposer
+    if (index == 3) // for Width-mode StarDecomposer
+    {
+        m_undo->setEnabled(true);
+        m_redo->setEnabled(true);
+    }
+    else if (index == 4) // for Width-mode ZZDecomposer
     {
         m_undo->setEnabled(true);
         m_redo->setEnabled(true);
@@ -67,8 +86,10 @@ void MainWindow::tabPageChanged(int index)
         m_undo->setEnabled(false);
         m_redo->setEnabled(false);
     }
+    int tmpindex;
     if (index > 0)
     {
+        readschlegel(m_builder->getGraphModel()->getfolderename(), m_builder->getGraphModel()->getfilename());
         if (m_workingGraphModel == NULL)
         {
             m_workingGraphModel = m_builder->getGraphModel();
@@ -80,15 +101,20 @@ void MainWindow::tabPageChanged(int index)
             else
             {
                 m_decomposer->setRootGraph(m_builder->getGraphModel());
+                m_decomposer2->setRootGraph(m_builder->getGraphModel());
                 m_identDecomposer->setRootGraph(m_builder->getGraphModel());
+                m_identDecomposer2->setRootGraph(m_builder->getGraphModel());
                 m_zzCalculatorPanel->addRow(m_builder->getGraphModel());
 
+                m_zzCalculatorPanel->setFilename(m_builder->getGraphModel()->getfolderename(), m_builder->getGraphModel()->getfilename());
+                //readschlegel(m_model -> getfolderename(),m_model -> getfilename());
+		tmpindex = index;
             }
 
         }
         else
         {
-            GraphModel* model = m_builder->getGraphModel();
+            GraphModel* model = m_builder->getGraphModel(); //problem here
             QSet<EdgeModel> s1, s2;
             QListIterator<EdgeModel> it(m_workingGraphModel->getAllEdges());
             while(it.hasNext())
@@ -107,10 +133,18 @@ void MainWindow::tabPageChanged(int index)
                 m_workingGraphModel = model;
                 m_decomposer->clear();
                 m_decomposer->setRootGraph(m_builder->getGraphModel());
+                m_decomposer2->clear();
+                m_decomposer2->setRootGraph(m_builder->getGraphModel());
 
                 m_identDecomposer->clear();
-                m_identDecomposer->setRootGraph( m_builder->getGraphModel());
+                m_identDecomposer->setRootGraph(m_builder->getGraphModel());
+
+                m_identDecomposer2->clear();
+                m_identDecomposer2->setRootGraph(m_builder->getGraphModel());
                 m_zzCalculatorPanel->addRow(m_builder->getGraphModel());
+
+                m_zzCalculatorPanel->setFilename(m_builder->getGraphModel()->getfolderename(), m_builder->getGraphModel()->getfilename());
+                //readschlegel(m_model -> getfolderename(),m_model -> getfilename());
             }
             else
             {
@@ -126,9 +160,19 @@ void MainWindow::tabPageChanged(int index)
     else if (index == 1)
     {
         m_savefile->setEnabled(true);
-        m_zzinfo->setEnabled(true);
+        m_zzinfo->setEnabled(false);
     }
     else if ( index == 2 )
+    {
+        m_zzinfo->setEnabled(false);
+        m_savefile->setEnabled(true);
+    }
+    else if ( index == 3 )
+    {
+        m_zzinfo->setEnabled(true);
+        m_savefile->setEnabled(true);
+    }
+    else if ( index == 4 )
     {
         m_zzinfo->setEnabled(true);
         m_savefile->setEnabled(true);
@@ -137,7 +181,6 @@ void MainWindow::tabPageChanged(int index)
     {
         m_savefile->setEnabled(false);
         m_zzinfo->setEnabled(false);
-
     }
 
     // if (index == 1)
@@ -155,15 +198,19 @@ void MainWindow::clearAll()
 {
     m_builder->clear();
     m_decomposer->clear();
+    m_decomposer2->clear();
     m_tabWidget->setCurrentIndex(0);
     m_identDecomposer->clear();
+    m_identDecomposer2->clear();
     m_workingGraphModel = NULL;
 }
 void MainWindow::clearDecomposer()
 {
     m_decomposer->clear();
+    m_decomposer2->clear();
     m_tabWidget->setCurrentIndex(0);
     m_identDecomposer->clear();
+    m_identDecomposer2->clear();
     m_workingGraphModel = NULL;
 }
 void MainWindow::selectall()
@@ -214,7 +261,7 @@ void MainWindow::createToolbars()
     m_toolbar->addSeparator();
     m_toolbar->addAction(m_zzinfo);
 
-    QAction *test = new QAction(tr("Rotate Grid"),this);
+/*    QAction *test = new QAction(tr("Rotate Grid"),this);
     test->setCheckable(true);
     connect(test, SIGNAL(toggled(bool)),this, SLOT(setGridRotate(bool)));
     m_toolbar->addAction(test);
@@ -228,10 +275,10 @@ void MainWindow::createToolbars()
     // connect(m_toogleSeparateFragments, SIGNAL(triggered(bool)),this, SLOT(toggleSeparateFragments(bool)));
     // m_toolbar->addAction(m_toogleSeparateFragments);
 
-//    test = new QAction(tr("Set atom links"),this);
-//    connect(test, SIGNAL(triggered()),this, SLOT(test()));
-//    m_toolbar->addAction(test);
-
+    test = new QAction(tr("Set atom links"),this);
+    connect(test, SIGNAL(triggered()),this, SLOT(test()));
+    m_toolbar->addAction(test);
+*/
 //    m_toolbar->addAction(m_hidezeros);
 
 }
@@ -273,7 +320,21 @@ void MainWindow::saveClicked()
     }
     else if (m_tabWidget->currentIndex() == 2)
     {
+        bool comp;
+        QString filename = getSVGExportFilename(this,&comp);
+        if (!filename.isNull())
+        {
+            m_decomposer2->exportSVG(filename, comp);
+        }
+    }
+    else if (m_tabWidget->currentIndex() == 3)
+    {
         m_identDecomposer->exportSVG();
+    }
+
+    else if (m_tabWidget->currentIndex() == 4)
+    {
+        m_identDecomposer2->exportSVG();
     }
 
     // else if (m_tabWidget->currentIndex() == 4)
@@ -318,9 +379,18 @@ void MainWindow::saveClicked()
 
 void MainWindow::showZZInfo()
 {
-    if (m_tabWidget->currentIndex() == 2)
+    if (m_tabWidget->currentIndex() == 3)
     {
         QString ZZ = m_identDecomposer->getZZPolynomial();
+        QMessageBox msgBox;
+
+        msgBox.setText(ZZ);
+        msgBox.setDetailedText(ZZ);
+        msgBox.exec();
+    }
+    else if (m_tabWidget->currentIndex() == 4)
+    {
+        QString ZZ = m_identDecomposer2->getZZPolynomial();
         QMessageBox msgBox;
 
         msgBox.setText(ZZ);
@@ -336,7 +406,15 @@ void MainWindow::showZZInfo()
         msgBox.setDetailedText(ZZ);
         msgBox.exec();
     }
+    else if (m_tabWidget->currentIndex() == 2)
+    {
+        QString ZZ = m_decomposer2->getZZPolynomial();
+        QMessageBox msgBox;
 
+        msgBox.setText(ZZ);
+        msgBox.setDetailedText(ZZ);
+        msgBox.exec();
+    }
 }
 
 void MainWindow::showAbout()
@@ -356,17 +434,25 @@ void MainWindow::showAboutQt()
 
 void MainWindow::undo()
 {
-    if (m_tabWidget->currentIndex()==2)
+    if (m_tabWidget->currentIndex()==3)
     {
         m_identDecomposer->undo();
+    }
+    else if (m_tabWidget->currentIndex()==4)
+    {
+        m_identDecomposer2->undo();
     }
 }
 
 void MainWindow::redo()
 {
-    if (m_tabWidget->currentIndex()==2)
+    if (m_tabWidget->currentIndex()==3)
     {
         m_identDecomposer->redo();
+    }
+    else if (m_tabWidget->currentIndex()==4)
+    {
+        m_identDecomposer2->redo();
     }
 }
 
@@ -395,11 +481,11 @@ void MainWindow::builderProcessZZPolynomialRequest(GraphModel *model)
     }
 }
 
-void MainWindow::setGridRotate(bool rotate)
+/*void MainWindow::setGridRotate(bool rotate)
 {
     m_builder->setGridRotate(rotate);
     m_decomposer->setGridRotate(rotate);
-}
+}*/
 
 // void MainWindow::toggleSeparateFragments(bool isSeparated)
 // {

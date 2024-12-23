@@ -32,11 +32,13 @@ public:
     void setShowTagWhenDisconnected(bool ){}
     void updateTag(){}
     void updateBoundingRect(){}
+    void setFilename(QString foldername, QString filename);
 private:
     GraphModel* m_model;
     QList<BondItem*> m_bonditems;
     QHash<EdgeModel, BondItem*> m_edge_bond_mapping;
-
+    QString m_foldername;
+    QString m_filename;
 private:
 protected:
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);

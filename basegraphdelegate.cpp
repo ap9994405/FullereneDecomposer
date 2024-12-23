@@ -24,9 +24,9 @@ void BaseGraphDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
 
         if (!m_tagVisible)
         {
-            qDebug() << item->boundingRect2();
+            //qDebug() << item->boundingRect2();
             item->setTagVisible(m_tagVisible);
-            qDebug() << item->boundingRect2();
+            //qDebug() << item->boundingRect2();
         }
         painter->setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing | QPainter::TextAntialiasing);
         m_scene->addItem(item);

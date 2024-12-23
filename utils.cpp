@@ -12,37 +12,38 @@ const double PI = std::acos(-1.0);
 static QHash<QPoint, QPointF> xyMap;
 static QHash<QPoint, float> xMap, yMap, zMap;
 static QString m_filename;
-static double size = 2.0;
+static double size = 4.0;
 static QString abspath = QDir::currentPath();
 static QString sep =QDir::separator();
-void readschlegel(QString filename)
+void readschlegel(QString foldername, QString filename)
 {
-    // xyMap.clear();
-    // qDebug() << "Current Path:" << abspath;
-    m_filename = abspath+sep+"readfile"+sep+filename+"_schlegel";
+    foldername = subscript2ch(foldername);
+    filename = subscript2ch(filename);
 
+    m_filename = abspath+"/readfile"+"/"+foldername+"/schlegel"+"/"+filename+"_schlegel";
     QFile schlegelfile(m_filename);
     if (!schlegelfile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        qCritical() << "Unable to open the schlegel file.";
+        qCritical() << "Unable to open the schlegelfile.";
     }
     qreal x, y;
     int index=1;
     QTextStream in(&schlegelfile);
-    while (!in.atEnd()) 
-    {   
+    while (!in.atEnd())
+    {
         in >> x >> y;
         if (!in.atEnd())
         {
-            // qDebug() << x << y;
             xyMap[QPoint(0, index)] = QPointF(x, y);
             index += 1;
         }
     }
 }
-void readxyz(QString filename)
+void readxyz(QString foldername, QString filename)
 {
-    m_filename = abspath+sep+"readfile"+sep+filename;
+    foldername = subscript2ch(foldername);
+    filename = subscript2ch(filename);
+    m_filename = abspath+"/readfile"+"/"+foldername+"/"+filename;
     QString filePath = m_filename;
     QFile xyzfile(filePath);
     if (!xyzfile.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -60,7 +61,6 @@ void readxyz(QString filename)
     while (index <= cnat && !in.atEnd())
     {
         in >> atom >> x >> y >> z;
-        // qDebug() << x << y << z;
         xMap[QPoint(0, index)] = x;
         yMap[QPoint(0, index)] = y;
         zMap[QPoint(0, index)] = z;
@@ -81,9 +81,9 @@ QPoint XY2VertexXY(QPointF old_p, double r)
     return new_p;
 }
 QPointF vertexXY2XY(QPoint old_p, double r)
-{   
+{
     QPointF new_p;
-    new_p = xyMap[old_p]*30*size;
+    new_p = xyMap[old_p]*30*size; //bondlength is 30
 
     return new_p;
 }
@@ -209,3 +209,35 @@ bool isIsomorphic(const QList<QPointF> &graph1, const QList<QPointF> &graph2)
     }
     return true;
 }
+
+QString subscript2ch(const QString &input)
+{
+    QMap<QChar, QChar> subscriptMap;
+    subscriptMap[QChar(0x2080)] = '0';
+    subscriptMap[QChar(0x2081)] = '1';
+    subscriptMap[QChar(0x2082)] = '2';
+    subscriptMap[QChar(0x2083)] = '3';
+    subscriptMap[QChar(0x2084)] = '4';
+    subscriptMap[QChar(0x2085)] = '5';
+    subscriptMap[QChar(0x2086)] = '6';
+    subscriptMap[QChar(0x2087)] = '7';
+    subscriptMap[QChar(0x2088)] = '8';
+    subscriptMap[QChar(0x2089)] = '9';
+    subscriptMap[QChar(0x209B)] = 's';
+    subscriptMap[QChar(0x1D65)] = 'v';
+    subscriptMap[QChar(0x2095)] = 'h';
+    subscriptMap[QChar(0x0080)] = 'd';
+
+    QString result;
+
+    for (const QChar &ch : input) {
+        if (ch != 'C' && subscriptMap.contains(ch)) {
+            result += subscriptMap[ch];
+        } else {
+            result += ch;
+        }
+    }
+    return result;
+}
+
+
